@@ -1,5 +1,5 @@
-name: Test workflow identity provider
-run-name: ${{ github.actor }} auth via workflow identity provider
+name: Deploy PR env
+run-name: ${{ github.actor }} deployed env for PR ${{ github.event.pull_request.title }}
 on:
   pull_request:
     types: [opened, reopened]
@@ -43,7 +43,7 @@ jobs:
 
     - name: Create Terraform workspace for PR
       working-directory: terraform
-      run: terraform workspace new ${{ github.event.pull_request.id }}
+      run: terraform workspace select ${{ github.event.pull_request.title }} || terraform workspace new ${{ github.event.pull_request.title }}
 
     - name: Terraform Validate
       working-directory: terraform
@@ -51,4 +51,4 @@ jobs:
 
     - name: Terraform Apply
       working-directory: terraform
-      run: terraform apply -auto-approve -var="environment=${{ github.event.pull_request.id }}" -var="crawler_names=[\"blockfabrik\"]"
+      run: terraform apply -auto-approve -var="environment=${{ github.event.pull_request.title }}" -var="crawler_names=[\"blockfabrik\"]"
