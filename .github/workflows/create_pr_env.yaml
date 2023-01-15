@@ -1,15 +1,31 @@
 name: Test workflow identity provider
 run-name: ${{ github.actor }} auth via workflow identity provider
-on: workflow_dispatch
+pull_request:
+    types: [opened, reopened]
+
+secrets:
+  crawler-names:
+    description: 'A token passed from the caller workflow'
+    required: false
+
 jobs:
   test-id-provider:
     runs-on: ubuntu-latest
+
     permissions:
       contents: 'read'
       id-token: 'write'
 
     steps:
-    - id: 'auth'
+    - name: 'Checkout PR'
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+
+    - name: 'Zip crawler cloud function code'
+      run: zip crawler.zip crawler/*
+
+    - name: 'Authenticate to GCP'
       uses: 'google-github-actions/auth@v1'
       with:
         workload_identity_provider: 'projects/806290897760/locations/global/workloadIdentityPools/github-identity-pool/providers/github'
@@ -18,5 +34,25 @@ jobs:
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v1'
 
-    - name: 'Use gcloud CLI'
-      run: 'gcloud info'
+    - name: 'Setup Terraform'
+      uses: hashicorp/setup-terraform@v1
+
+    - name: Terraform Format
+      working_directory: terraform
+      run: terraform fmt -check
+
+    - name: Terraform Init
+      working_directory: terraform
+      run: terraform init
+
+    - name: Create Terraform workspace for PR
+      working_directory: terraform
+      run: terraform workspace new ${{ github.event.pull_request.id }}
+
+    - name: Terraform Validate
+      working_directory: terraform
+      run: terraform validate -no-color
+
+    - name: Terraform Apply
+      working_directory: terraform
+      run: terraform apply -auto-approve -var="environment=${{ github.event.pull_request.id }}" -var="crawler_names=[\"blockfabrik\"]"
