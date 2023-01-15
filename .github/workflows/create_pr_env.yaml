@@ -1,0 +1,22 @@
+name: Test workflow identity provider
+run-name: ${{ github.actor }} auth via workflow identity provider
+on: workflow_dispatch
+jobs:
+  test-id-provider:
+    # Add "id-token" with the intended permissions.
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        workload_identity_provider: 'projects/806290897760/locations/global/workloadIdentityPools/github-identity-pool/providers/github'
+        service_account: 'terraform@bouldercapacity.iam.gserviceaccount.com'
+
+    - name: 'Set up Cloud SDK'
+      uses: 'google-github-actions/setup-gcloud@v1'
+
+    - name: 'Use gcloud CLI'
+      run: 'gcloud info'
