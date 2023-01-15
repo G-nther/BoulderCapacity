@@ -41,13 +41,9 @@ jobs:
       working-directory: terraform
       run: terraform init
 
-    - id: getLowercaseHead
-      name: Get lowercase HEAD Ref
-      run: INPUT=${{ github.event.pull_request.head.ref }} echo "::set-output name=head::${INPUT,,}"
-
     - name: Create Terraform workspace for PR
       working-directory: terraform
-      run: terraform workspace select ${{steps.getLowercaseHead.outputs.head}} || terraform workspace new ${{steps.getLowercaseHead.outputs.head}}
+      run: terraform workspace select ${{ github.event.pull_request.id }} || terraform workspace new ${{ github.event.pull_request.id }}
 
     - name: Terraform Validate
       working-directory: terraform
@@ -55,4 +51,4 @@ jobs:
 
     - name: Terraform Apply
       working-directory: terraform
-      run: terraform apply -auto-approve -var="environment=${{steps.getLowercaseHead.outputs.head}}" -var="crawler_names=[\"blockfabrik\"]"
+      run: terraform apply -auto-approve -var="environment=${{ github.event.pull_request.id }}" -var="crawler_names=[\"blockfabrik\"]"
