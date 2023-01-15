@@ -5,6 +5,10 @@ terraform {
       version = "4.47.0"
     }
   }
+
+  backend "gcs" {
+    bucket = "boulder_capacity_terraform_state"
+  }
 }
 
 provider "google" {
@@ -14,8 +18,9 @@ provider "google" {
 }
 
 resource "google_storage_bucket" "raw_data" {
-  name     = "bouldercapacity-raw-data-${var.environment}"
-  location = "EU"
+  name          = "bouldercapacity-raw-data-${var.environment}"
+  location      = "EU"
+  force_destroy = true
 }
 
 resource "google_storage_bucket" "crawler_code_bucket" {
@@ -32,8 +37,8 @@ resource "google_storage_bucket_object" "crawler_code_archive" {
 module "crawler-functions" {
   source       = "./crawler-function"
   for_each     = toset(var.crawler_names)
-  name         = "${each.value}"
-  environment = "${var.environment}"
+  name         = each.value
+  environment  = var.environment
   data_bucket  = google_storage_bucket.raw_data.name
   code_bucket  = google_storage_bucket.crawler_code_bucket.name
   code_archive = google_storage_bucket_object.crawler_code_archive.name
