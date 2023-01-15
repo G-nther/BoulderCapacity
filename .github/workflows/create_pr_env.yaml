@@ -43,7 +43,7 @@ jobs:
 
     - name: Create Terraform workspace for PR
       working-directory: terraform
-      run: terraform workspace select ${{ github.event.pull_request.head.ref }} || terraform workspace new ${{ github.event.pull_request.head.ref }}
+      run: terraform workspace select ${${{ github.event.pull_request.head.ref }},,} || terraform workspace new ${${{ github.event.pull_request.head.ref }},,}
 
     - name: Terraform Validate
       working-directory: terraform
@@ -51,4 +51,4 @@ jobs:
 
     - name: Terraform Apply
       working-directory: terraform
-      run: terraform apply -auto-approve -var="environment=${{ github.event.pull_request.head.ref }}" -var="crawler_names=[\"blockfabrik\"]"
+      run: terraform apply -auto-approve -var="environment=${${{ github.event.pull_request.head.ref }},,} -var="crawler_names=[\"blockfabrik\"]"
