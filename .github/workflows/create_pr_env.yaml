@@ -19,7 +19,8 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
 
     - name: 'Zip crawler cloud function code'
-      run: zip crawler.zip crawler/*
+      working-directory: crawler
+      run: zip ../crawler.zip *
 
     - name: 'Authenticate to GCP'
       uses: 'google-github-actions/auth@v1'
